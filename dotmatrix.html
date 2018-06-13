@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Dot Matrix</title>
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet">
+    <link rel="stylesheet" href="dotmatrix.css">
+  </head>
+  <body>
+    <h1>Dot Matrix</h1>
+    <p>Drop an image onto the box below to create a colour dot matrix version.</p>
+
+    <div id="app">
+      <matrix
+        :background-color="backgroundColor"
+        :image-size="imageSize"
+        :dot-size="dotSize"
+        :spacing="spacing"
+        @has-image="hasLoadedImage = true"
+        @previewing="hasLoadedImage = false"
+        @no-preview="hasLoadedImage = true"
+        ref="matrix"
+      ></matrix>
+
+      <form>
+        <div v-if="hasLoadedImage">
+          <fieldset>
+            <legend>Image Sizing</legend>
+            <label><span class="label-text">Overall size</span>
+              <input type="range" min="2" max="100" v-model.number="imageSize">
+              <input type="number" min="2" max="100" v-model.number="imageSize">
+              dots
+            </label>
+            <label><span class="label-text">Spacing</span>
+              <input type="range" min="0" max="100" v-model.number="spacing">
+              <input type="number" min="0" max="100" v-model.number="spacing">
+              pixels
+            </label>
+
+            <label><span class="label-text">Dot size</span>
+              <input type="range" min="1" max="100" v-model.number="dotSize">
+              <input type="number" min="1" max="100" v-model.number="dotSize">
+              pixels
+            </label>
+          </fieldset>
+
+          <fieldset class="picker">
+            <legend>Background Colour</legend>
+            <color-picker @change="setBackgroundColor"></color-picker>
+          </fieldset>
+
+          <fieldset class="save">
+            <button type="button" @click="saveImage">Preview image for saving</button>
+          </fieldset>
+        </div>
+      </form>
+    </div>
+
+    <!-- templates -->
+
+    <template id="template-color-picker">
+      <div class="color-picker">
+        <canvas class="color-picker--lum-sat" width="100" height="100" @mousedown="lumSatInput "@mousemove="lumSatInput" ref="lumSatCanvas"></canvas>
+        <canvas class="color-picker--hue" width="360" height="1" @mousedown="hueInput" @mousemove="hueInput" ref="hueCanvas"></canvas>
+      </div>
+    </template>
+
+    <template id="template-matrix">
+      <div class="matrix"
+        :style="{ 'background-color': backgroundColor }"
+        :class="{ 'is-dragging': isDragging, 'is-previewing': !!renderedImage }"
+        @dragover="handleDragOver"
+        @dragenter="startDragging"
+        @dragleave="stopDragging"
+        @drop.stop.prevent="loadImageFromDrop"
+      >
+        <canvas
+          :style="{ 'margin-left': marginLeft, 'margin-top': marginTop }"
+          :class="{ 'scale-to-fit': scaleToFit }"
+          width="500"
+          height="500"
+          ref="output"
+        ></canvas>
+        <image-viewer :image="renderedImage" @close="destroyImage"></image-viewer>
+      </div>
+    </template>
+
+    <template id="template-image-viewer">
+      <div class="image-viewer" :class="{ visible: visible }">
+        <div class="dialog">
+          <h2>Image Preview</h2>
+          <figure ref="imageHolder"></figure>
+          <p>Right-click the image and chose Save Image.</p>
+          <button type="button" @click="$emit('close')">Done</button>
+        </div>
+      </div>
+    </template>
+
+    <!-- <script src="https://cdn.jsdelivr.net/npm/vue"></script> -->
+    <script src="vue.min.js"></script>
+    <script src="dotmatrix.js"></script>
+  </body>
+</html>
+
