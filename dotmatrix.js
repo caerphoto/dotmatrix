@@ -2,6 +2,7 @@
 'use strict';
 
 const PI2 = Math.PI * 2;
+const PADDING = 10;
 
 // var eventbus = new Vue();
 
@@ -30,7 +31,14 @@ Vue.component('color-picker', {
   },
   computed: {
     hsla: function () {
-      return `hsla(${this.hue}, ${this.saturation}%, ${this.luminance}%, 1)`;
+      return {
+        hue: this.hue,
+        saturation: this.saturation,
+        luminance: this.luminance
+      };
+    },
+    maxRgb: function () {
+      return this.rgbFromHsl(this.hue / 360, 1, 0.5, true);
     }
   },
   watch: {
@@ -40,7 +48,7 @@ Vue.component('color-picker', {
   },
   methods: {
     lumSatInput: function (evt) {
-      var lum, sat;
+      var rgb, sl;
       var x, y;
       var rect = this.lumSatRect;
 
@@ -55,10 +63,11 @@ Vue.component('color-picker', {
       this.lumSatCoords = [x, y];
       this.renderLumSat();
 
-      lum = this.lumFromCoordsInRect(x, y, rect.width, rect.height);
-      sat = x / rect.width;
-      this.luminance = Math.round(lum * 100);
-      this.saturation = Math.round(sat * 100);
+      rgb = this.rgbFromCoordsInRect(x, y, rect.width, rect.height, true);
+      sl = this.slFromRgb(rgb[0], rgb[1], rgb[2]);
+
+      this.saturation = Math.round(sl[0] * 100);
+      this.luminance = Math.round(sl[1] * 100);
     },
     hueInput: function (evt) {
       var x;
@@ -85,7 +94,7 @@ Vue.component('color-picker', {
       if(t < 2/3) return p + (q - p) * (2/3 - t) * 6;
       return p;
     },
-    rgbFromHsl: function (h, s, l) {
+    rgbFromHsl: function (h, s, l, asFloatingPoint) {
       var r, g, b;
       var p, q;
 
@@ -98,11 +107,38 @@ Vue.component('color-picker', {
         g = this.rgbFromHue(p, q, h);
         b = this.rgbFromHue(p, q, h - 1/3);
       }
-      return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
+      if (asFloatingPoint) {
+        return [r, g, b];
+      } else {
+        return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
+      }
+    },
+    slFromRgb: function (r, g, b) {
+      r /= 255; g /= 255; b /= 255;
+      var max = Math.max(r, g, b);
+      var min = Math.min(r, g, b);
+      var sat;
+      var lum = (max + min) / 2;
+      var d;
+
+      if (max === min) return [0, lum]; // achromatic
+
+      d = max - min;
+      sat = lum > 0.5 ? d / (2 - max - min) : d / (max + min);
+      return [sat, lum];
     },
 
-    lumFromCoordsInRect: function (x, y, w, h) {
-      return ((h - y) / h) * (1 - (x / w) / 2);
+    rgbFromCoordsInRect: function (x, y, w, h) {
+      var [mr, mg, mb] = this.maxRgb;
+      var sx = x / w;
+      var sy = 1 - y / h;
+
+      // Buncha linear interpolation magic.
+      var r = ((1 - sx) * 1 + sx * mr) * sy;
+      var g = ((1 - sx) * 1 + sx * mg) * sy;
+      var b = ((1 - sx) * 1 + sx * mb) * sy;
+
+      return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
     },
 
     renderLumSat: function () {
@@ -115,14 +151,10 @@ Vue.component('color-picker', {
       var pixels = imageData.data;
       var offset = 0;
       var rgb;
-      var hue = (this.hue / 360);
-      var lum, sat;
 
       for (y = 0; y < height; y += 1) {
         for (x = 0; x < width; x += 1) {
-          sat = x / width;
-          lum = this.lumFromCoordsInRect(x, y, width, height);
-          rgb = this.rgbFromHsl(hue, sat, lum);
+          rgb = this.rgbFromCoordsInRect(x, y, width, height);
           pixels[offset] =     rgb[0];
           pixels[offset + 1] = rgb[1];
           pixels[offset + 2] = rgb[2];
@@ -132,9 +164,14 @@ Vue.component('color-picker', {
       }
 
       ctx.putImageData(imageData, 0, 0);
+
+      ctx.beginPath();
+      ctx.strokeStyle = 'rgba(0, 0, 0, 0.7)';
+      ctx.arc(mouseX - 0.7, mouseY - 0.7, 6.7, 0, PI2);
+      ctx.stroke();
       ctx.beginPath();
       ctx.strokeStyle = '#fff';
-      ctx.arc(mouseX, mouseY, 5, 0, PI2);
+      ctx.arc(mouseX-0.5, mouseY - 0.5, 5, 0, PI2);
       ctx.stroke();
     },
     renderHue: function () {
@@ -211,17 +248,31 @@ Vue.component('image-viewer', {
 
 Vue.component('matrix', {
   template: getTextOf('template-matrix'),
-  props: ['backgroundColor', 'scaleToFit', 'imageSize', 'dotSize', 'spacing'],
+  props: ['backgroundColor', 'shrinkToFit', 'imageSize', 'dotSize', 'gridSize'],
   data: function () {
     return {
       isDragging: false,
       image: null,
+      isImageLoaded: false,
       context: null,
       marginLeft: '0',
       marginTop: '0',
       scaledCanvas: document.createElement('canvas'),
-      renderedImage: null
+      renderedImage: null,
+      isMounted: false,
+      canvasTransform: 'none',
+      containerRect: null,
+      canvasWidth: 0,
+      canvasHeight: 0
     };
+  },
+  watch: {
+    shrinkToFit: function () {
+      this.$refs.container.scrollTo(0, 0);
+    },
+    canvasWidth: function (newWidth) {
+      this.$emit('size-change', newWidth, this.canvasHeight);
+    }
   },
   computed: {
     scaledImageData: function () {
@@ -241,7 +292,6 @@ Vue.component('matrix', {
         canvas.height = this.imageSize;
       }
 
-
       ctx.drawImage(this.image, 0, 0, canvas.width, canvas.height);
       return ctx.getImageData(0, 0, canvas.width, canvas.height);
     },
@@ -250,33 +300,71 @@ Vue.component('matrix', {
     }
   },
   methods: {
+    getContainerRect: function () {
+      if (!this.containerRect) {
+        this.containerRect = this.$refs.container.getBoundingClientRect();
+      }
+      return this.containerRect;
+    },
+    getCanvasScale: function () {
+      var rect;
+      var scaleX, scaleY;
+      var finalScale;
+
+      if (!this.shrinkToFit) return { x: 1, y: 1, overall: 1 };
+
+      rect = this.getContainerRect();
+      scaleX = rect.width / (this.canvasWidth + 50);
+      scaleY = rect.height / (this.canvasHeight + 50);
+      finalScale = Math.min(Math.min(scaleX, scaleY), 1);
+
+      return {
+        x: scaleX,
+        y: scaleY,
+        overall: finalScale
+      };
+    },
     renderDots: function () {
       var ctx = this.context;
       var canvas = ctx.canvas;
       var source = this.scaledImageData;
       var pixels;
+      var rect;
       var x, y;
       var dx, dy;
       var offset = 0;
-      var scale = this.dotSize + this.spacing/2;
+      var scale = this.gridSize;
+      var canvasScale;
 
       if (!this.image) return;
 
-      canvas.width = source.width * scale;
-      canvas.height = source.height * scale;
+      rect = this.getContainerRect();
+      this.canvasWidth = canvas.width = source.width * scale + PADDING * 2;
+      this.canvasHeight = canvas.height = source.height * scale + PADDING * 2;
       ctx.fillStyle = this.backgroundColor;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      this.marginLeft = -(canvas.width / 2) + 'px';
-      this.marginTop = -(canvas.height / 2) + 'px';
+      canvasScale = this.getCanvasScale();
+
+      if (canvas.width * canvasScale.x  > rect.width) {
+        this.marginLeft = '0';
+      } else {
+        this.marginLeft = ((rect.width - canvas.width) / 2) + 'px';
+      }
+      if (canvas.height * canvasScale.y > rect.height) {
+        this.marginTop = '0';
+      } else {
+        this.marginTop = ((rect.height - canvas.height) / 2) + 'px';
+      }
+      this.canvasTransform = `scale(${canvasScale.overall})`;
 
       pixels = source.data;
 
       for (y = 0; y < source.height; y += 1) {
         for (x = 0; x < source.width; x += 1) {
           ctx.fillStyle = `rgb(${pixels[offset]}, ${pixels[offset + 1]}, ${pixels[offset + 2]})`;
-          dx = x * scale + scale/2;
-          dy = y * scale + scale/2;
+          dx = x * scale + scale/2 + PADDING;
+          dy = y * scale + scale/2 + PADDING;
           ctx.beginPath();
           ctx.arc(dx, dy, this.dotSize / 2, 0, PI2);
           ctx.fill();
@@ -294,18 +382,20 @@ Vue.component('matrix', {
     loadImageFromDrop: function (evt) {
       var matrix = this;
       var file = evt.dataTransfer.files[0];
+      var image;
 
       evt.preventDefault();
       if (this.renderedImage) return;
 
-      this.image = new Image();
-      this.image.onload = function () {
+      image = new Image();
+      image.onload = function () {
         URL.revokeObjectURL(this.src);
+        matrix.image = this;
         matrix.isDragging = false;
         matrix.renderDots();
         matrix.$emit('has-image');
       };
-      this.image.src = URL.createObjectURL(file);
+      image.src = URL.createObjectURL(file);
     },
     stopDragging: function () {
       this.isDragging = false;
@@ -325,6 +415,17 @@ Vue.component('matrix', {
     destroyImage: function () {
       URL.revokeObjectURL(this.renderedImage.src);
       this.renderedImage = null;
+    },
+    loadTestImage: function () {
+      var matrix = this;
+      var image = new Image();
+      image.onload = function () {
+        matrix.image = this;
+        matrix.isDragging = false;
+        matrix.renderDots();
+        matrix.$emit('has-image');
+      };
+      image.src = 'dot-matrix-sample-image.jpg';
     }
   },
   updated: function () {
@@ -335,26 +436,54 @@ Vue.component('matrix', {
     } else {
       this.$emit('no-preview');
     }
+  },
+  mounted: function () {
+    var matrix = this;
+    this.isMounted = true;
+
+    setTimeout(function () {
+      matrix.$forceUpdate();
+      matrix.loadTestImage();
+    }, 100);
   }
 });
 
 var app = new Vue({
   el: '#app',
   data: {
-    imageSize: 16,
-    spacing: 20,
-    dotSize: 20,
-    backgroundColor: 'hsl(0, 0%, 100%)',
-    scaleToFit: true,
-    hasLoadedImage: false
+    detail: 20,
+    dotSize: 16,
+    gridSize: 20,
+    hue: 0,
+    saturation: 0,
+    luminance: 100,
+    alphaPercent: 100,
+    shrinkToFit: false,
+    hasLoadedImage: false,
+    outputWidth: 0,
+    outputHeight: 0
+  },
+  computed: {
+    alpha: function () {
+      return this.alphaPercent / 100;
+    },
+    backgroundColor: function () {
+      return `hsla(${this.hue}, ${this.saturation}%, ${this.luminance}%, ${this.alpha})`;
+    },
   },
   methods: {
-    setBackgroundColor: function (hslColor) {
-      this.backgroundColor = hslColor;
+    setHSL: function (hsl) {
+      this.hue = hsl.hue;
+      this.saturation = hsl.saturation;
+      this.luminance = hsl.luminance;
     },
     saveImage: function () {
       this.$refs.matrix.createImage();
     },
+    updateSize: function (newWidth, newHeight) {
+      this.outputWidth = newWidth;
+      this.outputHeight = newHeight;
+    }
   },
   updated: function () {
     // For some reason this doesn't happen automatically when changing most

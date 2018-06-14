@@ -12,47 +12,57 @@
     <div id="app">
       <matrix
         :background-color="backgroundColor"
-        :image-size="imageSize"
+        :image-size="detail"
         :dot-size="dotSize"
-        :spacing="spacing"
+        :grid-size="gridSize"
+        :shrink-to-fit="shrinkToFit"
         @has-image="hasLoadedImage = true"
         @previewing="hasLoadedImage = false"
         @no-preview="hasLoadedImage = true"
+        @size-change="updateSize"
         ref="matrix"
       ></matrix>
 
       <form>
-        <div v-if="hasLoadedImage">
+        <div class="form-controls" :class="{ disabled: !hasLoadedImage }">
           <fieldset>
-            <legend>Image Sizing</legend>
-            <label><span class="label-text">Overall size</span>
-              <input type="range" min="2" max="100" v-model.number="imageSize">
-              <input type="number" min="2" max="100" v-model.number="imageSize">
-              dots
+            <legend>Image Controls</legend>
+            <label><span class="label-text">Detail</span>
+              <input type="range" min="2" max="100" v-model.number="detail">
+              <input type="number" min="2" max="100" v-model.number="detail"> dots
             </label>
-            <label><span class="label-text">Spacing</span>
-              <input type="range" min="0" max="100" v-model.number="spacing">
-              <input type="number" min="0" max="100" v-model.number="spacing">
-              pixels
+            <label><span class="label-text">Grid size</span>
+              <input type="range" min="1" max="200" v-model.number="gridSize">
+              <input type="number" min="1" max="200" v-model.number="gridSize"> pixels
             </label>
 
             <label><span class="label-text">Dot size</span>
-              <input type="range" min="1" max="100" v-model.number="dotSize">
-              <input type="number" min="1" max="100" v-model.number="dotSize">
-              pixels
+              <input type="range" min="1" max="200" v-model.number="dotSize">
+              <input type="number" min="1" max="200" v-model.number="dotSize"> pixels
             </label>
+
+            <label><span class="label-text">B/g opacity</span>
+              <input type="range" min="0" max="100" v-model.number="alphaPercent">
+              <input type="number" min="0" max="100" v-model.number="alphaPercent"> %
+            </label>
+
+            <label><input type="checkbox" v-model="shrinkToFit">
+              <span class="label-text">Shrink to fit</span>
           </fieldset>
 
           <fieldset class="picker">
-            <legend>Background Colour</legend>
-            <color-picker @change="setBackgroundColor"></color-picker>
+            <legend>Background Colour (HSL: {{hue}}&deg;, {{saturation}}% {{luminance}}%)</legend>
+            <color-picker @change="setHSL"></color-picker>
           </fieldset>
 
           <fieldset class="save">
-            <button type="button" @click="saveImage">Preview image for saving</button>
+            <button type="button" @click="saveImage">Render image for saving</button>
+            <p>Note: in Chrome you can right-click the canvas and save from it directly.</p>
           </fieldset>
         </div>
       </form>
+
+      <div v-if="hasLoadedImage" class="dimensions">Output size: {{ outputWidth }} &times; {{ outputHeight }} pixels</div>
     </div>
 
     <!-- templates -->
@@ -66,16 +76,15 @@
 
     <template id="template-matrix">
       <div class="matrix"
-        :style="{ 'background-color': backgroundColor }"
-        :class="{ 'is-dragging': isDragging, 'is-previewing': !!renderedImage }"
+        :class="{ 'shrink-to-fit': shrinkToFit, 'is-dragging': isDragging, 'is-previewing': !!renderedImage, 'has-image': !!image }"
         @dragover="handleDragOver"
         @dragenter="startDragging"
         @dragleave="stopDragging"
         @drop.stop.prevent="loadImageFromDrop"
+        ref="container"
       >
         <canvas
-          :style="{ 'margin-left': marginLeft, 'margin-top': marginTop }"
-          :class="{ 'scale-to-fit': scaleToFit }"
+          :style="{ 'background-color': backgroundColor, 'left': marginLeft, 'top': marginTop, transform: canvasTransform }"
           width="500"
           height="500"
           ref="output"
@@ -89,14 +98,14 @@
         <div class="dialog">
           <h2>Image Preview</h2>
           <figure ref="imageHolder"></figure>
-          <p>Right-click the image and chose Save Image.</p>
+          <p>Right-click the image and choose Save Image.</p>
           <button type="button" @click="$emit('close')">Done</button>
         </div>
       </div>
     </template>
 
-    <!-- <script src="https://cdn.jsdelivr.net/npm/vue"></script> -->
     <script src="vue.min.js"></script>
+    <!-- <script src="vue.js"></script> -->
     <script src="dotmatrix.js"></script>
   </body>
 </html>
