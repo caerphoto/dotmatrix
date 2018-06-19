@@ -186,7 +186,24 @@ fieldset.save p {
 
 fieldset label {
   display: block;
+  float: left;
   margin-bottom: 0.2em;
+}
+
+fieldset label.break-float {
+  clear: both;
+}
+.connect-controls {
+  font-size: 2em;
+  margin-left: 0.5em;
+  margin-top: 0.5em;
+  margin-bottom: -0.5em;
+  line-height: 1;
+}
+
+.connect-controls input {
+  vertical-align: 35%;
+  margin: 0;
 }
 
 .label-text {

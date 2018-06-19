@@ -452,14 +452,16 @@ var app = new Vue({
   el: '#app',
   data: {
     detail: 20,
-    dotSize: 16,
     gridSize: 20,
+    dotSize: 16,
     hue: 0,
     saturation: 0,
     luminance: 100,
     alphaPercent: 100,
     shrinkToFit: false,
     hasLoadedImage: false,
+    connectSizes: false,
+    gridDotRatio: 1,
     outputWidth: 0,
     outputHeight: 0
   },
@@ -483,6 +485,19 @@ var app = new Vue({
     updateSize: function (newWidth, newHeight) {
       this.outputWidth = newWidth;
       this.outputHeight = newHeight;
+    },
+    connectChange: function () {
+      this.gridDotRatio = this.gridSize / this.dotSize;
+    },
+    gridSizeChange: function () {
+      if (!this.connectSizes) return;
+
+      this.dotSize = Math.round(this.gridSize / this.gridDotRatio);
+    },
+    dotSizeChange: function () {
+      if (!this.connectSizes) return;
+
+      this.gridSize = Math.round(this.dotSize * this.gridDotRatio);
     }
   },
   updated: function () {

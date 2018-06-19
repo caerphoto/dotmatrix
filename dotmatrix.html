@@ -32,13 +32,15 @@
               <input type="number" min="2" max="100" v-model.number="detail"> dots
             </label>
             <label><span class="label-text">Grid size</span>
-              <input type="range" min="1" max="200" v-model.number="gridSize">
-              <input type="number" min="1" max="200" v-model.number="gridSize"> pixels
+              <input type="range" min="1" max="200" v-model.number="gridSize" @input="gridSizeChange">
+              <input type="number" min="1" max="200" v-model.number="gridSize" @input="gridSizeChange"> pixels
             </label>
 
+            <label class="connect-controls" title="Link grid and dot sizes">} <input type="checkbox" v-model="connectSizes" @change="connectChange"></label>
+
             <label><span class="label-text">Dot size</span>
-              <input type="range" min="1" max="200" v-model.number="dotSize">
-              <input type="number" min="1" max="200" v-model.number="dotSize"> pixels
+              <input type="range" min="1" max="200" v-model.number="dotSize" @input="dotSizeChange">
+              <input type="number" min="1" max="200" v-model.number="dotSize" @input="dotSizeChange"> pixels
             </label>
 
             <label><span class="label-text">B/g opacity</span>
@@ -46,7 +48,7 @@
               <input type="number" min="0" max="100" v-model.number="alphaPercent"> %
             </label>
 
-            <label><input type="checkbox" v-model="shrinkToFit">
+            <label class="break-float"><input type="checkbox" v-model="shrinkToFit">
               <span class="label-text">Shrink to fit</span>
           </fieldset>
 
