@@ -97,7 +97,7 @@ h1 + p {
 
 .dimensions {
   position: absolute;
-  bottom: 19.6rem;
+  top: 3.5rem;
   left: 0.8rem;
   color: #666;
   font-size: 0.8em;

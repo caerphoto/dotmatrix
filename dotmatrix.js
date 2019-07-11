@@ -248,7 +248,7 @@ Vue.component('image-viewer', {
 
 Vue.component('matrix', {
   template: getTextOf('template-matrix'),
-  props: ['backgroundColor', 'shrinkToFit', 'imageSize', 'dotSize', 'gridSize'],
+  props: ['backgroundColor', 'useSquares', 'shrinkToFit', 'imageSize', 'dotSize', 'gridSize'],
   data: function () {
     return {
       isDragging: false,
@@ -363,11 +363,17 @@ Vue.component('matrix', {
       for (y = 0; y < source.height; y += 1) {
         for (x = 0; x < source.width; x += 1) {
           ctx.fillStyle = `rgb(${pixels[offset]}, ${pixels[offset + 1]}, ${pixels[offset + 2]})`;
-          dx = x * scale + scale/2 + PADDING;
-          dy = y * scale + scale/2 + PADDING;
-          ctx.beginPath();
-          ctx.arc(dx, dy, this.dotSize / 2, 0, PI2);
-          ctx.fill();
+          if (this.useSquares) {
+            dx = x * scale + PADDING;
+            dy = y * scale + PADDING;
+            ctx.fillRect(dx, dy, this.dotSize, this.dotSize);
+          } else {
+            dx = x * scale + scale/2 + PADDING;
+            dy = y * scale + scale/2 + PADDING;
+            ctx.beginPath();
+            ctx.arc(dx, dy, this.dotSize / 2, 0, PI2);
+            ctx.fill();
+          }
           offset += 4;
         }
       }
@@ -458,6 +464,7 @@ var app = new Vue({
     saturation: 0,
     luminance: 100,
     alphaPercent: 100,
+    useSquares: false,
     shrinkToFit: false,
     hasLoadedImage: false,
     connectSizes: false,

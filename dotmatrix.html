@@ -16,6 +16,7 @@
         :dot-size="dotSize"
         :grid-size="gridSize"
         :shrink-to-fit="shrinkToFit"
+        :use-squares="useSquares"
         @has-image="hasLoadedImage = true"
         @previewing="hasLoadedImage = false"
         @no-preview="hasLoadedImage = true"
@@ -48,6 +49,8 @@
               <input type="number" min="0" max="100" v-model.number="alphaPercent"> %
             </label>
 
+            <label class="break-float"><input type="checkbox" v-model="useSquares">
+              <span class="label-text">Use squares</span>
             <label class="break-float"><input type="checkbox" v-model="shrinkToFit">
               <span class="label-text">Shrink to fit</span>
           </fieldset>
