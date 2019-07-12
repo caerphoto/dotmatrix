@@ -1,13 +1,16 @@
 <!DOCTYPE html>
 <html>
   <head>
+    <meta charset="utf8">
     <title>Dot Matrix</title>
     <link href="https://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet">
     <link rel="stylesheet" href="dotmatrix.css">
   </head>
   <body>
-    <h1>Dot Matrix</h1>
-    <p>Drop an image onto the box below to create a colour dot matrix version.</p>
+    <header>
+      <h1>𝙳𝚘𝚝 𝙼𝚊𝚝𝚛𝚒𝚡</h1>
+      <p>Drop an image onto the box below to create a colour dot matrix version.</p>
+    </header>
 
     <div id="app">
       <matrix
@@ -28,31 +31,38 @@
         <div class="form-controls" :class="{ disabled: !hasLoadedImage }">
           <fieldset>
             <legend>Image Controls</legend>
-            <label><span class="label-text">Detail</span>
-              <input type="range" min="2" max="100" v-model.number="detail">
-              <input type="number" min="2" max="100" v-model.number="detail"> dots
-            </label>
-            <label><span class="label-text">Grid size</span>
-              <input type="range" min="1" max="200" v-model.number="gridSize" @input="gridSizeChange">
-              <input type="number" min="1" max="200" v-model.number="gridSize" @input="gridSizeChange"> pixels
-            </label>
+            <div class="sliders">
+              <label for="matrix-detail">Detail</label>
+              <input id="matrix-detail" type="range" min="2" max="100" v-model.number="detail">
+              <input type="number" min="2" max="100" v-model.number="detail">
+              <span class="units">dots</span>
 
-            <label class="connect-controls" title="Link grid and dot sizes">} <input type="checkbox" v-model="connectSizes" @change="connectChange"></label>
+              <label for="matrix-grid-size">Grid size</label>
+              <input id="matrix-grid-size" type="range" min="1" max="200" v-model.number="gridSize" @input="gridSizeChange">
+              <input type="number" min="1" max="200" v-model.number="gridSize" @input="gridSizeChange">
+              <span class="units">pixels</span>
 
-            <label><span class="label-text">Dot size</span>
-              <input type="range" min="1" max="200" v-model.number="dotSize" @input="dotSizeChange">
-              <input type="number" min="1" max="200" v-model.number="dotSize" @input="dotSizeChange"> pixels
-            </label>
+              <label for="matrix-dot-size">Dot size</label>
+              <input id="matrix-dot-size" type="range" min="1" max="200" v-model.number="dotSize" @input="dotSizeChange">
+              <input type="number" min="1" max="200" v-model.number="dotSize" @input="dotSizeChange">
+              <span class="units">pixels</span>
 
-            <label><span class="label-text">B/g opacity</span>
-              <input type="range" min="0" max="100" v-model.number="alphaPercent">
-              <input type="number" min="0" max="100" v-model.number="alphaPercent"> %
-            </label>
+              <label class="connect-controls" title="Link grid and dot sizes">} <input type="checkbox" v-model="connectSizes" @change="connectChange"></label>
 
-            <label class="break-float"><input type="checkbox" v-model="useSquares">
-              <span class="label-text">Use squares</span>
-            <label class="break-float"><input type="checkbox" v-model="shrinkToFit">
-              <span class="label-text">Shrink to fit</span>
+              <label for="matrix-bg-opacity">B/g opacity</label>
+              <input id="matrix-bg-opacity" type="range" min="0" max="100" v-model.number="alphaPercent">
+              <input type="number" min="0" max="100" v-model.number="alphaPercent">
+              <span class="units">%</span>
+            </div data-comment=".sliders">
+
+            <div class="controls-row">
+              <label class="break-float"><input type="checkbox" v-model="useSquares">
+                <span class="label-text">Use squares</span>
+              </label>
+              <label class="break-float"><input type="checkbox" v-model="shrinkToFit">
+                <span class="label-text">Shrink to fit</span>
+              </label>
+            </div>
           </fieldset>
 
           <fieldset class="picker">
@@ -89,7 +99,7 @@
         ref="container"
       >
         <canvas
-          :style="{ 'background-color': backgroundColor, 'left': marginLeft, 'top': marginTop, transform: canvasTransform }"
+          :style="{ 'background-color': backgroundColor, 'width': scaledWidth }"
           width="500"
           height="500"
           ref="output"
@@ -109,8 +119,8 @@
       </div>
     </template>
 
-    <script src="vue.min.js"></script>
-    <!-- <script src="vue.js"></script> -->
+    <!-- <script src="vue.min.js"></script> -->
+    <script src="vue.js"></script>
     <script src="dotmatrix.js"></script>
   </body>
 </html>

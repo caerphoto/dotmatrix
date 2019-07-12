@@ -18,15 +18,14 @@ Vue.component('color-picker', {
   template: getTextOf('template-color-picker'),
   data: function () {
     return {
-      hue: 0,
+      hue: Math.floor(Math.random() * 360),
       saturation: 0,
       luminance: 100,
       contexts: {
         lumSat: null,
         hue: null
       },
-      lumSatCoords: [0, 0],
-      hueCoord: 0
+      lumSatCoords: [0, 0]
     };
   },
   computed: {
@@ -39,6 +38,9 @@ Vue.component('color-picker', {
     },
     maxRgb: function () {
       return this.rgbFromHsl(this.hue / 360, 1, 0.5, true);
+    },
+    hueCoord: function () {
+      return this.hue * (this.$refs.hueCanvas.width / 360);
     }
   },
   watch: {
@@ -78,7 +80,6 @@ Vue.component('color-picker', {
       x = evt.clientX - 10 - rect.left;
       x = Math.min(x, rect.width);
       x = Math.max(x, 0);
-      this.hueCoord = x;
       this.hue = Math.round((x / rect.width) * 360);
       this.renderLumSat();
       this.renderHue();
@@ -260,7 +261,7 @@ Vue.component('matrix', {
       scaledCanvas: document.createElement('canvas'),
       renderedImage: null,
       isMounted: false,
-      canvasTransform: 'none',
+      scaledWidth: 'auto',
       containerRect: null,
       canvasWidth: 0,
       canvasHeight: 0
@@ -334,6 +335,7 @@ Vue.component('matrix', {
       var dx, dy;
       var offset = 0;
       var scale = this.gridSize;
+      var SQUARE_OFFSET = this.useSquares ? this.dotSize / 2 : 0;
       var canvasScale;
 
       if (!this.image) return;
@@ -356,20 +358,18 @@ Vue.component('matrix', {
       } else {
         this.marginTop = ((rect.height - canvas.height) / 2) + 'px';
       }
-      this.canvasTransform = `scale(${canvasScale.overall})`;
+      this.scaledWidth = `${canvas.width * canvasScale.overall - 20}px`;
 
       pixels = source.data;
 
       for (y = 0; y < source.height; y += 1) {
         for (x = 0; x < source.width; x += 1) {
           ctx.fillStyle = `rgb(${pixels[offset]}, ${pixels[offset + 1]}, ${pixels[offset + 2]})`;
+          dx = x * scale + scale/2 + PADDING - SQUARE_OFFSET;
+          dy = y * scale + scale/2 + PADDING - SQUARE_OFFSET;
           if (this.useSquares) {
-            dx = x * scale + PADDING;
-            dy = y * scale + PADDING;
             ctx.fillRect(dx, dy, this.dotSize, this.dotSize);
           } else {
-            dx = x * scale + scale/2 + PADDING;
-            dy = y * scale + scale/2 + PADDING;
             ctx.beginPath();
             ctx.arc(dx, dy, this.dotSize / 2, 0, PI2);
             ctx.fill();
@@ -465,7 +465,7 @@ var app = new Vue({
     luminance: 100,
     alphaPercent: 100,
     useSquares: false,
-    shrinkToFit: false,
+    shrinkToFit: true,
     hasLoadedImage: false,
     connectSizes: false,
     gridDotRatio: 1,
