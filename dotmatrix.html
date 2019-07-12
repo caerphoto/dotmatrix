@@ -82,8 +82,8 @@
 
     <template id="template-color-picker">
       <div class="color-picker">
-        <canvas class="color-picker--lum-sat" width="100" height="100" @mousedown="lumSatInput "@mousemove="lumSatInput" ref="lumSatCanvas"></canvas>
-        <canvas class="color-picker--hue" width="360" height="1" @mousedown="hueInput" @mousemove="hueInput" ref="hueCanvas"></canvas>
+        <canvas class="color-picker--lum-sat" width="100" height="100" @mousedown.prevent="lumSatInput "@mousemove="lumSatInput" ref="lumSatCanvas"></canvas>
+        <canvas class="color-picker--hue" width="360" height="1" @mousedown.prevent="hueInput" @mousemove="hueInput" ref="hueCanvas"></canvas>
       </div>
     </template>
 
