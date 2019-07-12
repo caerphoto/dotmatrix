@@ -131,15 +131,13 @@ h1 + p {
 
 form {
   background-color: #eee;
-  padding-top: 1em;
-}
-
-.form-controls {
+  padding: 0.2rem 0.5rem 0.5rem;
   display: grid;
-  grid-template-columns: 50% 50%;
+  grid-template-columns: 1fr 1fr;
+  grid-gap: 0.2rem 0.5rem;
 }
 
-.form-controls.disabled_ {
+form.disabled_ {
   opacity: 0.3;
   pointer-events: none;
   filter: saturate(0%) contrast(80%) brightness(1.2);
@@ -193,6 +191,7 @@ button:active {
 
 fieldset {
   margin: 0;
+  padding: 0;
   border: none;
 }
 

@@ -25,7 +25,8 @@ Vue.component('color-picker', {
         lumSat: null,
         hue: null
       },
-      lumSatCoords: [0, 0]
+      lumSatCoords: [0, 0],
+      resizeTimer: null
     };
   },
   computed: {
@@ -211,18 +212,33 @@ Vue.component('color-picker', {
       canvas.height = rect.height;
 
       return rect;
+    },
+    initRects() {
+      this.lumSatRect = this.initCanvasRect(this.$refs.lumSatCanvas);
+      this.hueRect = this.initCanvasRect(this.$refs.hueCanvas);
+
+      this.renderLumSat(0, 0);
+      this.renderHue();
     }
   },
   mounted: function () {
+    var that = this;
     this.contexts.lumSat = this.$refs.lumSatCanvas.getContext('2d');
     this.contexts.hue = this.$refs.hueCanvas.getContext('2d');
     this.contexts.hue.fillStyle = '#fff';
 
-    this.lumSatRect = this.initCanvasRect(this.$refs.lumSatCanvas);
-    this.hueRect = this.initCanvasRect(this.$refs.hueCanvas);
+    this.initRects();
 
-    this.renderLumSat(0, 0);
-    this.renderHue();
+    window.addEventListener('resize', function () {
+      if (that.resizeTimer) {
+        clearTimeout(that.resizeTimer);
+      }
+
+      that.resizeTimer = setTimeout(function () {
+        that.resizeTimer = null;
+        that.initRects();
+      }, 100);
+    });
   }
 });
 
