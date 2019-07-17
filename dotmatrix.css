@@ -45,7 +45,7 @@ h1 + p {
 .matrix {
   box-sizing: border-box;
   border: 5px solid #ddd;
-  overflow: scroll;
+  overflow: auto;
   display: grid;
   justify-items: center;
   align-items: center;

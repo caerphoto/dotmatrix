@@ -351,7 +351,7 @@ Vue.component('matrix', {
       var dx, dy;
       var offset = 0;
       var scale = this.gridSize;
-      var SQUARE_OFFSET = this.useSquares ? this.dotSize / 2 : 0;
+      var SQUARE_OFFSET = this.useSquares ? this.dotSize / 2 - 0 : 0;
       var canvasScale;
 
       if (!this.image) return;
@@ -374,7 +374,7 @@ Vue.component('matrix', {
       } else {
         this.marginTop = ((rect.height - canvas.height) / 2) + 'px';
       }
-      this.scaledWidth = `${canvas.width * canvasScale.overall - 20}px`;
+      this.scaledWidth = `${canvas.width * canvasScale.overall}px`;
 
       pixels = source.data;
 
